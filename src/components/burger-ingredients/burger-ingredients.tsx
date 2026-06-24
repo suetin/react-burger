@@ -1,51 +1,118 @@
-import { Tab } from '@krgaa/react-developer-burger-ui-components';
+import { Counter, CurrencyIcon, Tab } from '@krgaa/react-developer-burger-ui-components';
+import { useMemo, useRef, useState } from 'react';
 
-import type { TIngredient } from '@utils/types';
+import type { TIngredient, TIngredientType } from '@utils/types';
 
 import styles from './burger-ingredients.module.css';
 
+const ingredientTabs: { label: string; value: TIngredientType }[] = [
+  { label: 'Булки', value: 'bun' },
+  { label: 'Соусы', value: 'sauce' },
+  { label: 'Начинки', value: 'main' },
+];
+
+const ingredientTitles: Record<TIngredientType, string> = {
+  bun: 'Булки',
+  sauce: 'Соусы',
+  main: 'Начинки',
+};
+
 type TBurgerIngredientsProps = {
+  ingredientCounts: Record<string, number>;
   ingredients: TIngredient[];
+  onIngredientClick: (ingredient: TIngredient) => void;
 };
 
 export const BurgerIngredients = ({
+  ingredientCounts,
   ingredients,
+  onIngredientClick,
 }: TBurgerIngredientsProps): React.JSX.Element => {
-  console.log(ingredients);
+  const [activeTab, setActiveTab] = useState<TIngredientType>('bun');
+  const sectionRefs = useRef<Record<TIngredientType, HTMLElement | null>>({
+    bun: null,
+    sauce: null,
+    main: null,
+  });
+
+  const groupedIngredients = useMemo(() => {
+    const groups: Record<TIngredientType, TIngredient[]> = {
+      bun: [],
+      sauce: [],
+      main: [],
+    };
+
+    ingredients.forEach((ingredient) => {
+      groups[ingredient.type].push(ingredient);
+    });
+
+    return groups;
+  }, [ingredients]);
+
+  const handleTabClick = (value: string): void => {
+    const ingredientType = value as TIngredientType;
+
+    setActiveTab(ingredientType);
+    sectionRefs.current[ingredientType]?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <section className={styles.burger_ingredients}>
-      <nav>
+      <nav aria-label="Категории ингредиентов">
         <ul className={styles.menu}>
-          <Tab
-            value="bun"
-            active={true}
-            onClick={() => {
-              /* TODO */
-            }}
-          >
-            Булки
-          </Tab>
-          <Tab
-            value="main"
-            active={false}
-            onClick={() => {
-              /* TODO */
-            }}
-          >
-            Начинки
-          </Tab>
-          <Tab
-            value="sauce"
-            active={false}
-            onClick={() => {
-              /* TODO */
-            }}
-          >
-            Соусы
-          </Tab>
+          {ingredientTabs.map(({ label, value }) => (
+            <li className={styles.menu_item} key={value}>
+              <Tab value={value} active={activeTab === value} onClick={handleTabClick}>
+                {label}
+              </Tab>
+            </li>
+          ))}
         </ul>
       </nav>
+      <div className={`${styles.list} custom-scroll`}>
+        {ingredientTabs.map(({ value }) => (
+          <section
+            className="pt-10"
+            key={value}
+            ref={(element) => {
+              sectionRefs.current[value] = element;
+            }}
+          >
+            <h2 className="text text_type_main-medium mb-6">
+              {ingredientTitles[value]}
+            </h2>
+            <ul className={`${styles.cards} pl-4 pr-4`}>
+              {groupedIngredients[value].map((ingredient) => (
+                <li className={styles.card_item} key={ingredient._id}>
+                  <button
+                    className={styles.card}
+                    type="button"
+                    onClick={() => onIngredientClick(ingredient)}
+                  >
+                    {Boolean(ingredientCounts[ingredient._id]) && (
+                      <Counter count={ingredientCounts[ingredient._id]} size="default" />
+                    )}
+                    <img
+                      className={styles.image}
+                      src={ingredient.image}
+                      alt={ingredient.name}
+                    />
+                    <span className={`${styles.price} mt-1 mb-1`}>
+                      <span className="text text_type_digits-default">
+                        {ingredient.price}
+                      </span>
+                      <CurrencyIcon type="primary" />
+                    </span>
+                    <span className="text text_type_main-default">
+                      {ingredient.name}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
     </section>
   );
 };

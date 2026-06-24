@@ -6,7 +6,7 @@
   "scripts": {
     "build": "vite build",
     "commit": "cz",
-    "check": "stylelint && eslint src/",
+    "check": "stylelint \"./src/**/*.css\" && eslint src/",
     "e2e": "npx playwright test",
     "e2e:ui": "npx playwright test --ui",
     "dev": "vite",

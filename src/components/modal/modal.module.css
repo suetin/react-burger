@@ -1,0 +1,30 @@
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 101;
+  box-sizing: border-box;
+  width: 720px;
+  min-height: 540px;
+  padding: 40px 40px 60px;
+  color: var(--text-primary-color);
+  background-color: var(--background);
+  border-radius: 40px;
+  transform: translate(-50%, -50%);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 64px;
+}
+
+.close {
+  display: flex;
+  padding: 0;
+  color: var(--text-primary-color);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
