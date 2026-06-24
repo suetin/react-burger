@@ -19,6 +19,8 @@ export const Modal = ({
   children,
   onClose,
 }: TModalProps): React.JSX.Element => {
+  const modalRoot = document.getElementById('modals');
+
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
@@ -38,7 +40,9 @@ export const Modal = ({
       <ModalOverlay onClose={onClose} />
       <section className={styles.modal} aria-modal="true" role="dialog">
         <header className={styles.header}>
-          {title && <h2 className="text text_type_main-large">{title}</h2>}
+          {title && (
+            <h2 className={`${styles.title} text text_type_main-large`}>{title}</h2>
+          )}
           <button
             className={styles.close}
             type="button"
@@ -51,6 +55,6 @@ export const Modal = ({
         {children}
       </section>
     </>,
-    document.body
+    modalRoot!
   );
 };
