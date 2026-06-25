@@ -1,10 +1,14 @@
-import { INGREDIENTS_ENDPOINT, ORDERS_ENDPOINT } from '@utils/constants';
+import { API_BASE_URL, INGREDIENTS_ENDPOINT, ORDERS_ENDPOINT } from '@utils/constants';
 
 import type { TCreateOrderResponse, TIngredient } from '@utils/types';
 
 type TIngredientsResponse = {
   success: boolean;
   data: TIngredient[];
+};
+
+type TApiResponse = {
+  success: boolean;
 };
 
 const getError = (error: unknown): Error => {
@@ -30,20 +34,28 @@ const checkResponse = <T>(response: Response): Promise<T> => {
   return getResponseError(response).then((error) => Promise.reject(error));
 };
 
-const request = <T>(url: string, options?: RequestInit): Promise<T> => {
-  return fetch(url, options)
+const checkSuccess = <T extends TApiResponse>(response: T): T => {
+  if (response.success) {
+    return response;
+  }
+
+  throw new Error('Ответ сервера не success');
+};
+
+const request = <T extends TApiResponse>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> => {
+  return fetch(`${API_BASE_URL}/${endpoint}`, options)
     .then((response) => checkResponse<T>(response))
+    .then(checkSuccess)
     .catch((error: unknown) => Promise.reject(getError(error)));
 };
 
 export const getIngredients = (): Promise<TIngredient[]> => {
-  return request<TIngredientsResponse>(INGREDIENTS_ENDPOINT).then((response) => {
-    if (!response.success) {
-      throw new Error('Не удалось загрузить ингредиенты');
-    }
-
-    return response.data;
-  });
+  return request<TIngredientsResponse>(INGREDIENTS_ENDPOINT).then(
+    (response) => response.data
+  );
 };
 
 export const createOrder = (ingredientIds: string[]): Promise<number> => {
@@ -53,11 +65,5 @@ export const createOrder = (ingredientIds: string[]): Promise<number> => {
       'Content-Type': 'application/json',
     },
     method: 'POST',
-  }).then((response) => {
-    if (!response.success) {
-      throw new Error('Не удалось оформить заказ');
-    }
-
-    return response.order.number;
-  });
+  }).then((response) => response.order.number);
 };
