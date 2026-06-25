@@ -44,6 +44,7 @@ const constructorSlice = createSlice({
         state.ingredients.push({ ...ingredient, constructorId });
       },
     },
+    clearConstructor: () => initialState,
     moveIngredient: (state, action: PayloadAction<TMoveIngredientPayload>) => {
       const { constructorId, toIndex } = action.payload;
       const fromIndex = state.ingredients.findIndex(
@@ -73,8 +74,12 @@ const constructorSlice = createSlice({
   },
 });
 
-export const { addIngredient, moveIngredient, removeIngredientByConstructorId } =
-  constructorSlice.actions;
+export const {
+  addIngredient,
+  clearConstructor,
+  moveIngredient,
+  removeIngredientByConstructorId,
+} = constructorSlice.actions;
 export const constructorReducer = constructorSlice.reducer;
 
 export const selectConstructorBun = (state: RootState): TIngredient | null => {

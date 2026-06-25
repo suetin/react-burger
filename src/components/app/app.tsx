@@ -8,7 +8,10 @@ import { IngredientDetails } from '@components/ingredient-details/ingredient-det
 import { Modal } from '@components/modal/modal';
 import { OrderDetails } from '@components/order-details/order-details';
 import { useAppDispatch, useAppSelector } from '@services/hooks';
-import { selectConstructorIngredientCounts } from '@services/slices/constructor-slice';
+import {
+  clearConstructor,
+  selectConstructorIngredientCounts,
+} from '@services/slices/constructor-slice';
 import {
   clearIngredient,
   selectCurrentIngredient,
@@ -20,7 +23,11 @@ import {
   selectIngredientsError,
   selectIngredientsLoading,
 } from '@services/slices/ingredients-slice';
-import { clearOrder, selectOrderOpen } from '@services/slices/order-slice';
+import {
+  clearOrder,
+  selectOrderNumber,
+  selectOrderOpen,
+} from '@services/slices/order-slice';
 
 import type { TIngredient } from '@utils/types';
 
@@ -34,6 +41,7 @@ export const App = (): React.JSX.Element => {
   const errorMessage = useAppSelector(selectIngredientsError);
   const selectedIngredient = useAppSelector(selectCurrentIngredient);
   const isOrderDetailsOpen = useAppSelector(selectOrderOpen);
+  const orderNumber = useAppSelector(selectOrderNumber);
 
   useEffect(() => {
     void dispatch(fetchIngredients());
@@ -51,8 +59,12 @@ export const App = (): React.JSX.Element => {
   }, [dispatch]);
 
   const handleCloseOrderModal = useCallback((): void => {
+    if (orderNumber) {
+      dispatch(clearConstructor());
+    }
+
     dispatch(clearOrder());
-  }, [dispatch]);
+  }, [dispatch, orderNumber]);
 
   return (
     <div className={styles.app}>
