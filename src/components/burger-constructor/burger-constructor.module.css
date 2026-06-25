@@ -42,3 +42,25 @@
   gap: 8px;
   margin: 0;
 }
+
+.placeholder_item {
+  padding-left: 32px;
+}
+
+.placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 536px;
+  min-height: 80px;
+  background: var(--background-element);
+  border-radius: var(--common-border-radius-s);
+}
+
+.placeholder_top {
+  border-radius: var(--top-constructor-item-border-radius);
+}
+
+.placeholder_bottom {
+  border-radius: var(--bottom-constructor-item-border-radius);
+}

@@ -14,3 +14,15 @@ export type TIngredient = {
   image_mobile: string;
   __v: number;
 };
+
+export type TConstructorIngredient = TIngredient & {
+  constructorId: string;
+};
+
+export type TCreateOrderResponse = {
+  name: string;
+  order: {
+    number: number;
+  };
+  success: boolean;
+};
