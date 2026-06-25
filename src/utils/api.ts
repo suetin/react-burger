@@ -1,6 +1,6 @@
-import { INGREDIENTS_ENDPOINT } from '@utils/constants';
+import { INGREDIENTS_ENDPOINT, ORDERS_ENDPOINT } from '@utils/constants';
 
-import type { TIngredient } from '@utils/types';
+import type { TCreateOrderResponse, TIngredient } from '@utils/types';
 
 type TIngredientsResponse = {
   success: boolean;
@@ -43,5 +43,21 @@ export const getIngredients = (): Promise<TIngredient[]> => {
     }
 
     return response.data;
+  });
+};
+
+export const createOrder = (ingredientIds: string[]): Promise<number> => {
+  return request<TCreateOrderResponse>(ORDERS_ENDPOINT, {
+    body: JSON.stringify({ ingredients: ingredientIds }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  }).then((response) => {
+    if (!response.success) {
+      throw new Error('Не удалось оформить заказ');
+    }
+
+    return response.order.number;
   });
 };
