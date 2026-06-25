@@ -1,0 +1,33 @@
+.details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image {
+  width: 480px;
+  height: 240px;
+  object-fit: contain;
+}
+
+.nutrition {
+  display: grid;
+  grid-template-columns: repeat(4, 120px);
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nutrition_item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.nutrition_item span:first-child {
+  white-space: nowrap;
+}
