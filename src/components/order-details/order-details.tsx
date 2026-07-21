@@ -5,7 +5,7 @@ import {
   selectOrderError,
   selectOrderLoading,
   selectOrderNumber,
-} from '@services/slices/order-slice';
+} from '@services/order/slice';
 
 import styles from './order-details.module.css';
 

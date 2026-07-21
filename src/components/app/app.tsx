@@ -1,100 +1,155 @@
-import { Preloader } from '@krgaa/react-developer-burger-ui-components';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
 import { AppHeader } from '@components/app-header/app-header';
-import { BurgerConstructor } from '@components/burger-constructor/burger-constructor';
-import { BurgerIngredients } from '@components/burger-ingredients/burger-ingredients';
-import { IngredientDetails } from '@components/ingredient-details/ingredient-details';
 import { Modal } from '@components/modal/modal';
-import { OrderDetails } from '@components/order-details/order-details';
-import { useAppDispatch, useAppSelector } from '@services/hooks';
+import { ProtectedRoute } from '@components/protected-route/protected-route';
+import { FeedPage } from '@pages/feed-page/feed-page';
+import { ForgotPasswordPage } from '@pages/forgot-password-page/forgot-password-page';
+import { Home } from '@pages/home-page/home-page';
 import {
-  clearConstructor,
-  selectConstructorIngredientCounts,
-} from '@services/slices/constructor-slice';
+  IngredientContent,
+  IngredientPage,
+} from '@pages/ingredient-page/ingredient-page';
+import { LoginPage } from '@pages/login-page/login-page';
+import { NotFoundPage } from '@pages/not-found-page/not-found-page';
+import { ProfileForm } from '@pages/profile-form/profile-form';
+import { ProfileOrdersPage } from '@pages/profile-orders-page/profile-orders-page';
+import { ProfilePage } from '@pages/profile-page/profile-page';
+import { RegisterPage } from '@pages/register-page/register-page';
+import { ResetPasswordPage } from '@pages/reset-password-page/reset-password-page';
+import { useAppDispatch } from '@services/hooks';
+import { fetchIngredients } from '@services/ingredients/slice';
+import { checkUserAuth } from '@services/user/actions';
 import {
-  clearIngredient,
-  selectCurrentIngredient,
-  selectIngredient,
-} from '@services/slices/current-ingredient-slice';
-import {
-  fetchIngredients,
-  selectIngredients,
-  selectIngredientsError,
-  selectIngredientsLoading,
-} from '@services/slices/ingredients-slice';
-import {
-  clearOrder,
-  selectOrderNumber,
-  selectOrderOpen,
-} from '@services/slices/order-slice';
+  clearIngredientOverlay,
+  getStoredIngredientBackground,
+  saveIngredientOverlay,
+} from '@utils/ingredient-overlay-storage';
 
-import type { TIngredient } from '@utils/types';
+import type { Location } from 'react-router-dom';
 
 import styles from './app.module.css';
 
+type TRoutedLocationState = { backgroundLocation?: Location };
+
+const GuestRoute = ({ children }: { children: React.ReactNode }): React.JSX.Element => (
+  <ProtectedRoute guestOnly>{children}</ProtectedRoute>
+);
+
 export const App = (): React.JSX.Element => {
   const dispatch = useAppDispatch();
-  const ingredients = useAppSelector(selectIngredients);
-  const ingredientCounts = useAppSelector(selectConstructorIngredientCounts);
-  const isLoading = useAppSelector(selectIngredientsLoading);
-  const errorMessage = useAppSelector(selectIngredientsError);
-  const selectedIngredient = useAppSelector(selectCurrentIngredient);
-  const isOrderDetailsOpen = useAppSelector(selectOrderOpen);
-  const orderNumber = useAppSelector(selectOrderNumber);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const stateBackgroundLocation = (location.state as TRoutedLocationState | null)
+    ?.backgroundLocation;
+  const reloadBackgroundLocation = useMemo((): Location | undefined => {
+    if (stateBackgroundLocation) return undefined;
+    const backgroundPath = getStoredIngredientBackground(
+      `${location.pathname}${location.search}${location.hash}`
+    );
+    if (!backgroundPath) return undefined;
+    const url = new URL(backgroundPath, window.location.origin);
+    return {
+      hash: url.hash,
+      key: 'ingredient-overlay-reload-background',
+      pathname: url.pathname,
+      search: url.search,
+      state: null,
+    };
+  }, [location.hash, location.pathname, location.search, stateBackgroundLocation]);
+  const backgroundLocation = stateBackgroundLocation ?? reloadBackgroundLocation;
 
   useEffect(() => {
     void dispatch(fetchIngredients());
+    void dispatch(checkUserAuth());
   }, [dispatch]);
 
-  const handleIngredientClick = useCallback(
-    (ingredient: TIngredient): void => {
-      dispatch(selectIngredient(ingredient));
-    },
-    [dispatch]
-  );
-
-  const handleCloseIngredientModal = useCallback((): void => {
-    dispatch(clearIngredient());
-  }, [dispatch]);
-
-  const handleCloseOrderModal = useCallback((): void => {
-    if (orderNumber) {
-      dispatch(clearConstructor());
+  useEffect(() => {
+    const overlayPath = `${location.pathname}${location.search}${location.hash}`;
+    if (stateBackgroundLocation) {
+      const backgroundPath = `${stateBackgroundLocation.pathname}${stateBackgroundLocation.search}${stateBackgroundLocation.hash}`;
+      saveIngredientOverlay(overlayPath, backgroundPath);
+      return;
     }
+    if (!location.pathname.startsWith('/ingredients/')) {
+      clearIngredientOverlay();
+    }
+  }, [location.hash, location.pathname, location.search, stateBackgroundLocation]);
 
-    dispatch(clearOrder());
-  }, [dispatch, orderNumber]);
+  const closeIngredientModal = useCallback((): void => {
+    clearIngredientOverlay();
+    if (reloadBackgroundLocation) {
+      const backgroundPath = `${reloadBackgroundLocation.pathname}${reloadBackgroundLocation.search}${reloadBackgroundLocation.hash}`;
+      void navigate(backgroundPath, { replace: true });
+      return;
+    }
+    void navigate(-1);
+  }, [navigate, reloadBackgroundLocation]);
 
   return (
     <div className={styles.app}>
       <AppHeader />
-      <h1 className={`${styles.title} text text_type_main-large mt-10 mb-5 pl-5`}>
-        Соберите бургер
-      </h1>
-      {isLoading && <Preloader />}
-      {!isLoading && errorMessage && (
-        <p className={`${styles.message} text text_type_main-default`}>{errorMessage}</p>
-      )}
-      {!isLoading && !errorMessage && (
-        <main className={`${styles.main} pl-5 pr-5`}>
-          <BurgerIngredients
-            ingredientCounts={ingredientCounts}
-            ingredients={ingredients}
-            onIngredientClick={handleIngredientClick}
+      <Routes location={backgroundLocation ?? location}>
+        <Route path="/" element={<Home />} />
+        <Route path="/ingredients/:id" element={<IngredientPage />} />
+        <Route path="/feed" element={<FeedPage />} />
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <LoginPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <GuestRoute>
+              <RegisterPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <GuestRoute>
+              <ForgotPasswordPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <GuestRoute>
+              <ResetPasswordPage />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<ProfileForm />} />
+          <Route path="orders" element={<ProfileOrdersPage />} />
+        </Route>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+      {backgroundLocation && (
+        <Routes>
+          <Route
+            path="/ingredients/:id"
+            element={
+              <Modal title="Детали ингредиента" onClose={closeIngredientModal}>
+                <IngredientContent />
+              </Modal>
+            }
           />
-          <BurgerConstructor />
-        </main>
-      )}
-      {selectedIngredient && (
-        <Modal title="Детали ингредиента" onClose={handleCloseIngredientModal}>
-          <IngredientDetails ingredient={selectedIngredient} />
-        </Modal>
-      )}
-      {isOrderDetailsOpen && (
-        <Modal onClose={handleCloseOrderModal}>
-          <OrderDetails />
-        </Modal>
+        </Routes>
       )}
     </div>
   );

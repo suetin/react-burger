@@ -4,6 +4,11 @@ import { createOrder } from '@utils/api';
 
 import type { RootState } from '@services/store';
 
+export const createOrderThunk = createAsyncThunk<number, string[]>(
+  'order/createOrder',
+  createOrder
+);
+
 export type TOrderState = {
   currentRequestId: string | null;
   error: string | null;
@@ -20,22 +25,11 @@ const initialState: TOrderState = {
   orderNumber: null,
 };
 
-export const createOrderThunk = createAsyncThunk<number, string[]>(
-  'order/createOrder',
-  createOrder
-);
-
 const orderSlice = createSlice({
   name: 'order',
   initialState,
   reducers: {
-    clearOrder: (state) => {
-      state.currentRequestId = null;
-      state.error = null;
-      state.isLoading = false;
-      state.isOpen = false;
-      state.orderNumber = null;
-    },
+    clearOrder: () => initialState,
   },
   extraReducers: (builder) => {
     builder
@@ -47,45 +41,24 @@ const orderSlice = createSlice({
         state.orderNumber = null;
       })
       .addCase(createOrderThunk.fulfilled, (state, action) => {
-        if (state.currentRequestId !== action.meta.requestId) {
-          return;
-        }
-
+        if (state.currentRequestId !== action.meta.requestId) return;
         state.currentRequestId = null;
-        state.error = null;
         state.isLoading = false;
-        state.isOpen = true;
         state.orderNumber = action.payload;
       })
       .addCase(createOrderThunk.rejected, (state, action) => {
-        if (state.currentRequestId !== action.meta.requestId) {
-          return;
-        }
-
+        if (state.currentRequestId !== action.meta.requestId) return;
         state.currentRequestId = null;
         state.error = 'Не удалось оформить заказ. Попробуйте позже.';
         state.isLoading = false;
-        state.isOpen = true;
-        state.orderNumber = null;
       });
   },
 });
 
 export const { clearOrder } = orderSlice.actions;
 export const orderReducer = orderSlice.reducer;
-
-export const selectOrderError = (state: RootState): string | null => {
-  return state.order.error;
-};
-
-export const selectOrderLoading = (state: RootState): boolean => {
-  return state.order.isLoading;
-};
-
-export const selectOrderNumber = (state: RootState): number | null => {
-  return state.order.orderNumber;
-};
-
-export const selectOrderOpen = (state: RootState): boolean => {
-  return state.order.isOpen;
-};
+export const selectOrderError = (state: RootState): string | null => state.order.error;
+export const selectOrderLoading = (state: RootState): boolean => state.order.isLoading;
+export const selectOrderNumber = (state: RootState): number | null =>
+  state.order.orderNumber;
+export const selectOrderOpen = (state: RootState): boolean => state.order.isOpen;

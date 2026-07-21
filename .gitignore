@@ -27,3 +27,9 @@ storybook-static
 
 playwright-report
 test-results
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+*.md
+!README.md
