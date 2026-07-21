@@ -26,3 +26,42 @@ export type TCreateOrderResponse = {
   };
   success: boolean;
 };
+
+export type TUser = {
+  email: string;
+  name: string;
+};
+
+export type TAuthResponse = {
+  accessToken: string;
+  refreshToken: string;
+  success: boolean;
+  user: TUser;
+};
+
+export type TTokenResponse = {
+  accessToken: string;
+  refreshToken: string;
+  success: boolean;
+};
+
+export type TUserResponse = {
+  success: boolean;
+  user: TUser;
+};
+
+export type TMessageResponse = {
+  message: string;
+  success: boolean;
+};
+
+export type TLoginData = {
+  email: string;
+  password: string;
+};
+
+export type TRegisterData = TLoginData & {
+  name: string;
+};
+
+export type TUpdateUserData = TRegisterData;

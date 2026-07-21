@@ -1,6 +1,7 @@
 import { Counter, CurrencyIcon, Tab } from '@krgaa/react-developer-burger-ui-components';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useDrag } from 'react-dnd';
+import { Link, useLocation } from 'react-router-dom';
 
 import { DND_ITEM_TYPES } from '@utils/dnd';
 
@@ -23,21 +24,20 @@ const ingredientTitles: Record<TIngredientType, string> = {
 type TIngredientCardProps = {
   count: number;
   ingredient: TIngredient;
-  onIngredientClick: (ingredient: TIngredient) => void;
 };
 
 type TBurgerIngredientsProps = {
   ingredientCounts: Record<string, number>;
   ingredients: TIngredient[];
-  onIngredientClick: (ingredient: TIngredient) => void;
 };
 
 const IngredientCard = ({
   count,
   ingredient,
-  onIngredientClick,
 }: TIngredientCardProps): React.JSX.Element => {
-  const dragRef = useRef<HTMLButtonElement>(null);
+  const location = useLocation();
+  const dragRef = useRef<HTMLAnchorElement>(null);
+  const didDragRef = useRef(false);
   const [{ isDragging }, drag] = useDrag<TIngredient, void, { isDragging: boolean }>(
     () => ({
       collect: (monitor): { isDragging: boolean } => ({
@@ -52,12 +52,26 @@ const IngredientCard = ({
   drag(dragRef);
 
   return (
-    <button
+    <Link
       className={styles.card}
       ref={dragRef}
-      type="button"
+      to={`/ingredients/${ingredient._id}`}
+      state={{ backgroundLocation: location }}
       style={{ opacity: isDragging ? 0.5 : 1 }}
-      onClick={() => onIngredientClick(ingredient)}
+      onClick={(event) => {
+        if (didDragRef.current) {
+          event.preventDefault();
+          return;
+        }
+      }}
+      onDragStart={() => {
+        didDragRef.current = true;
+      }}
+      onDragEnd={() => {
+        window.setTimeout(() => {
+          didDragRef.current = false;
+        });
+      }}
     >
       {Boolean(count) && <Counter count={count} size="default" />}
       <img className={styles.image} src={ingredient.image} alt={ingredient.name} />
@@ -66,14 +80,13 @@ const IngredientCard = ({
         <CurrencyIcon type="primary" />
       </span>
       <span className="text text_type_main-default">{ingredient.name}</span>
-    </button>
+    </Link>
   );
 };
 
 export const BurgerIngredients = ({
   ingredientCounts,
   ingredients,
-  onIngredientClick,
 }: TBurgerIngredientsProps): React.JSX.Element => {
   const [activeTab, setActiveTab] = useState<TIngredientType>('bun');
   const listRef = useRef<HTMLDivElement>(null);
@@ -172,7 +185,6 @@ export const BurgerIngredients = ({
                   <IngredientCard
                     count={ingredientCounts[ingredient._id] ?? 0}
                     ingredient={ingredient}
-                    onIngredientClick={onIngredientClick}
                   />
                 </li>
               ))}

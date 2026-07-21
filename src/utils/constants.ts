@@ -1,5 +1,11 @@
 export const API_BASE_URL = 'https://new-stellarburgers.education-services.ru/api';
-
 export const INGREDIENTS_ENDPOINT = 'ingredients';
-
 export const ORDERS_ENDPOINT = 'orders';
+export const REGISTER_ENDPOINT = 'auth/register';
+export const LOGIN_ENDPOINT = 'auth/login';
+export const LOGOUT_ENDPOINT = 'auth/logout';
+export const TOKEN_ENDPOINT = 'auth/token';
+export const USER_ENDPOINT = 'auth/user';
+export const PASSWORD_RESET_ENDPOINT = 'password-reset';
+export const PASSWORD_RESET_CONFIRM_ENDPOINT = 'password-reset/reset';
+export const RESET_PASSWORD_ACCESS_KEY = 'stellarBurgerResetPasswordAllowed';

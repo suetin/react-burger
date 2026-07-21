@@ -6,8 +6,8 @@ import {
 } from '@krgaa/react-developer-burger-ui-components';
 import { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-import { useAppDispatch, useAppSelector } from '@services/hooks';
 import {
   addIngredient,
   moveIngredient,
@@ -16,8 +16,10 @@ import {
   selectConstructorIngredientIds,
   selectConstructorIngredients,
   selectConstructorTotalPrice,
-} from '@services/slices/constructor-slice';
-import { createOrderThunk, selectOrderLoading } from '@services/slices/order-slice';
+} from '@services/constructor/slice';
+import { useAppDispatch, useAppSelector } from '@services/hooks';
+import { createOrderThunk, selectOrderLoading } from '@services/order/slice';
+import { selectIsAuthChecked, selectUser } from '@services/user/slice';
 import { DND_ITEM_TYPES } from '@utils/dnd';
 
 import type { TConstructorDragItem } from '@utils/dnd';
@@ -160,6 +162,10 @@ export const BurgerConstructor = (): React.JSX.Element => {
   const orderIngredientIds = useAppSelector(selectConstructorIngredientIds);
   const totalPrice = useAppSelector(selectConstructorTotalPrice);
   const isOrderLoading = useAppSelector(selectOrderLoading);
+  const isAuthChecked = useAppSelector(selectIsAuthChecked);
+  const user = useAppSelector(selectUser);
+  const location = useLocation();
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const canCreateOrder = Boolean(burgerBun) && middleIngredients.length > 0;
@@ -181,6 +187,11 @@ export const BurgerConstructor = (): React.JSX.Element => {
   dropConstructorItem(listRef);
 
   const handleOrderClick = (): void => {
+    if (!isAuthChecked) return;
+    if (!user) {
+      void navigate('/login', { state: { from: location } });
+      return;
+    }
     if (canCreateOrder) {
       void dispatch(createOrderThunk(orderIngredientIds));
     }
@@ -235,13 +246,13 @@ export const BurgerConstructor = (): React.JSX.Element => {
           <CurrencyIcon type="primary" />
         </p>
         <Button
-          disabled={!canCreateOrder || isOrderLoading}
+          disabled={!canCreateOrder || isOrderLoading || !isAuthChecked}
           htmlType="button"
           type="primary"
           size="large"
           onClick={handleOrderClick}
         >
-          Оформить заказ
+          {!isAuthChecked ? 'Проверяем авторизацию...' : 'Оформить заказ'}
         </Button>
       </footer>
     </section>
