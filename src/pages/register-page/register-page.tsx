@@ -6,7 +6,9 @@ import { useAppDispatch, useAppSelector } from '@services/hooks';
 import { registerUserThunk } from '@services/user/actions';
 import { selectUserError, selectUserLoading } from '@services/user/slice';
 
-import styles from '../page.module.css';
+import authStyles from '../auth-links.module.css';
+import formStyles from '../page-form.module.css';
+import layoutStyles from '../page-layout.module.css';
 
 export const RegisterPage = (): React.JSX.Element => {
   const dispatch = useAppDispatch();
@@ -17,10 +19,10 @@ export const RegisterPage = (): React.JSX.Element => {
   const [password, setPassword] = useState('');
 
   return (
-    <main className={styles.centered}>
+    <main className={layoutStyles.centered}>
       <h1 className="text text_type_main-medium mb-6">Регистрация</h1>
       <form
-        className={styles.form}
+        className={formStyles.form}
         onSubmit={(event) => {
           event.preventDefault();
           void dispatch(registerUserThunk({ email, name, password }));
@@ -47,16 +49,16 @@ export const RegisterPage = (): React.JSX.Element => {
           onChange={(event) => setPassword(event.target.value)}
         />
         {error && (
-          <p className={`${styles.error} text text_type_main-default`}>{error}</p>
+          <p className={`${formStyles.error} text text_type_main-default`}>{error}</p>
         )}
         <Button disabled={isLoading} htmlType="submit" type="primary" size="medium">
           Зарегистрироваться
         </Button>
       </form>
-      <div className={styles.links}>
+      <div className={authStyles.links}>
         <p className="text text_type_main-default text_color_inactive">
           Уже зарегистрированы?{' '}
-          <Link className={styles.link} to="/login">
+          <Link className={layoutStyles.link} to="/login">
             Войти
           </Link>
         </p>
