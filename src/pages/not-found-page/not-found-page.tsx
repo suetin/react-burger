@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-import styles from '../page.module.css';
+import styles from '../page-layout.module.css';
 
 export const NotFoundPage = (): React.JSX.Element => (
   <main className={styles.centered}>

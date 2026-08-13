@@ -18,7 +18,8 @@ import {
   selectConstructorTotalPrice,
 } from '@services/constructor/slice';
 import { useAppDispatch, useAppSelector } from '@services/hooks';
-import { createOrderThunk, selectOrderLoading } from '@services/order/slice';
+import { createOrderThunk } from '@services/order/actions';
+import { selectOrderLoading } from '@services/order/slice';
 import { selectIsAuthChecked, selectUser } from '@services/user/slice';
 import { DND_ITEM_TYPES } from '@utils/dnd';
 

@@ -10,13 +10,16 @@ import {
   TOKEN_ENDPOINT,
   USER_ENDPOINT,
 } from '@utils/constants';
+import { parseOrderResponse } from '@utils/order-validation';
 import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
+  getTokenStorageRevision,
   setTokens,
 } from '@utils/token-storage';
 
+import type { TOrder, TOrderResponse } from '@utils/order-types';
 import type {
   TAuthResponse,
   TCreateOrderResponse,
@@ -42,6 +45,20 @@ export class ApiError extends Error {
   }
 }
 
+export class SessionInvalidatedError extends ApiError {
+  constructor() {
+    super('Session is invalid');
+    this.name = 'SessionInvalidatedError';
+  }
+}
+
+export class OrderNotFoundError extends ApiError {
+  constructor() {
+    super('Order not found', 404);
+    this.name = 'OrderNotFoundError';
+  }
+}
+
 const toApiError = (error: unknown, status = 0): ApiError => {
   if (error instanceof ApiError) {
     return error;
@@ -58,6 +75,10 @@ const toApiError = (error: unknown, status = 0): ApiError => {
 export const isTokenExpiredError = (error: unknown): boolean => {
   return error instanceof ApiError && error.message === 'jwt expired';
 };
+
+export const isSessionInvalidatedError = (
+  error: unknown
+): error is SessionInvalidatedError => error instanceof SessionInvalidatedError;
 
 const checkResponse = async <T extends TApiResponse>(response: Response): Promise<T> => {
   let body: unknown;
@@ -88,13 +109,32 @@ export const request = async <T extends TApiResponse>(
   }
 };
 
-let refreshPromise: Promise<TTokenResponse> | null = null;
+type TRefreshFlight = {
+  promise: Promise<TTokenResponse>;
+  revision: number;
+};
 
-const refreshToken = async (): Promise<TTokenResponse> => {
+let refreshFlight: TRefreshFlight | null = null;
+
+const isNonBlankToken = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim().length > 0;
+
+const hasUsableAccessToken = (value: unknown): value is string => {
+  if (!isNonBlankToken(value)) return false;
+
+  const normalized = value.trim();
+  return (
+    normalized !== 'Bearer' &&
+    (!normalized.startsWith('Bearer ') ||
+      normalized.slice('Bearer '.length).trim().length > 0)
+  );
+};
+
+const refreshToken = async (revision: number): Promise<TTokenResponse> => {
   const token = getRefreshToken();
-  if (!token) {
+  if (!isNonBlankToken(token)) {
     clearTokens();
-    throw new ApiError('Refresh token is missing');
+    throw new SessionInvalidatedError();
   }
 
   try {
@@ -103,19 +143,36 @@ const refreshToken = async (): Promise<TTokenResponse> => {
       headers: { 'Content-Type': 'application/json' },
       method: 'POST',
     });
+
+    if (
+      !hasUsableAccessToken(response.accessToken) ||
+      !isNonBlankToken(response.refreshToken) ||
+      getTokenStorageRevision() !== revision
+    ) {
+      throw new SessionInvalidatedError();
+    }
+
     setTokens(response.accessToken, response.refreshToken);
     return response;
-  } catch (error) {
-    clearTokens();
-    throw error;
+  } catch {
+    if (getTokenStorageRevision() === revision) {
+      clearTokens();
+    }
+    throw new SessionInvalidatedError();
   }
 };
 
-const getRefreshedTokens = (): Promise<TTokenResponse> => {
-  refreshPromise ??= refreshToken().finally(() => {
-    refreshPromise = null;
+export const getRefreshedTokens = (): Promise<TTokenResponse> => {
+  const revision = getTokenStorageRevision();
+  if (refreshFlight?.revision === revision) return refreshFlight.promise;
+
+  const promise = refreshToken(revision).finally(() => {
+    if (refreshFlight?.promise === promise) {
+      refreshFlight = null;
+    }
   });
-  return refreshPromise;
+  refreshFlight = { promise, revision };
+  return promise;
 };
 
 export const fetchWithRefresh = async <T extends TApiResponse>(
@@ -145,6 +202,7 @@ export const fetchWithRefresh = async <T extends TApiResponse>(
       } catch (replayError) {
         if (isTokenExpiredError(replayError)) {
           clearTokens();
+          throw new SessionInvalidatedError();
         }
         throw replayError;
       }
@@ -156,6 +214,7 @@ export const fetchWithRefresh = async <T extends TApiResponse>(
     } catch (replayError) {
       if (isTokenExpiredError(replayError)) {
         clearTokens();
+        throw new SessionInvalidatedError();
       }
       throw replayError;
     }
@@ -179,6 +238,27 @@ export const createOrder = async (ingredientIds: string[]): Promise<number> => {
     jsonOptions('POST', { ingredients: ingredientIds })
   );
   return response.order.number;
+};
+
+export const getOrderById = async (id: string): Promise<TOrder> => {
+  if (id.trim().length === 0) {
+    throw new ApiError('Order id is missing');
+  }
+
+  const response = await request<TOrderResponse>(
+    `${ORDERS_ENDPOINT}/${encodeURIComponent(id)}`,
+    { method: 'GET' }
+  );
+  const result = parseOrderResponse(response);
+
+  if (!result.success) {
+    throw new ApiError(result.error);
+  }
+  if (result.data.order._id !== id) {
+    throw new ApiError('Invalid order response');
+  }
+
+  return result.data.order;
 };
 
 export const registerUser = (data: TRegisterData): Promise<TAuthResponse> => {

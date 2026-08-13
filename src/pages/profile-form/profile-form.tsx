@@ -7,7 +7,7 @@ import { selectUser, selectUserError, selectUserLoading } from '@services/user/s
 
 import type { FormEvent } from 'react';
 
-import styles from '../page.module.css';
+import styles from '../page-form.module.css';
 
 export const ProfileForm = (): React.JSX.Element => {
   const dispatch = useAppDispatch();

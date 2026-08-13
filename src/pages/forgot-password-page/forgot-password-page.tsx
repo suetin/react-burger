@@ -7,7 +7,9 @@ import { RESET_PASSWORD_ACCESS_KEY } from '@utils/constants';
 
 import type { FormEvent } from 'react';
 
-import styles from '../page.module.css';
+import authStyles from '../auth-links.module.css';
+import formStyles from '../page-form.module.css';
+import layoutStyles from '../page-layout.module.css';
 
 export const ForgotPasswordPage = (): React.JSX.Element => {
   const navigate = useNavigate();
@@ -35,9 +37,9 @@ export const ForgotPasswordPage = (): React.JSX.Element => {
   };
 
   return (
-    <main className={styles.centered}>
+    <main className={layoutStyles.centered}>
       <h1 className="text text_type_main-medium mb-6">Восстановление пароля</h1>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={formStyles.form} onSubmit={handleSubmit}>
         <Input
           name="email"
           type="email"
@@ -46,16 +48,16 @@ export const ForgotPasswordPage = (): React.JSX.Element => {
           onChange={(event) => setEmail(event.target.value)}
         />
         {error && (
-          <p className={`${styles.error} text text_type_main-default`}>{error}</p>
+          <p className={`${formStyles.error} text text_type_main-default`}>{error}</p>
         )}
         <Button disabled={isLoading} htmlType="submit" type="primary" size="medium">
           Восстановить
         </Button>
       </form>
-      <div className={styles.links}>
+      <div className={authStyles.links}>
         <p className="text text_type_main-default text_color_inactive">
           Вспомнили пароль?{' '}
-          <Link className={styles.link} to="/login">
+          <Link className={layoutStyles.link} to="/login">
             Войти
           </Link>
         </p>

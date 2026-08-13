@@ -1,0 +1,237 @@
+.card {
+  overflow: hidden;
+  background: var(--background);
+  border-radius: 40px;
+  box-shadow: 0 4px 8px rgb(0 0 0 / 4%);
+}
+
+.cardLink {
+  display: block;
+  padding: 24px;
+  color: var(--text-primary-color);
+  text-decoration: none;
+}
+
+.cardLink:focus-visible {
+  outline: 2px solid var(--colors-interface-accent);
+  outline-offset: -4px;
+}
+
+.cardMeta,
+.cardFooter,
+.informationFooter,
+.compositionIngredient,
+.price {
+  display: flex;
+  align-items: center;
+}
+
+.cardMeta,
+.cardFooter,
+.informationFooter {
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.cardFooter {
+  margin-top: 24px;
+}
+
+.status {
+  color: var(--text-primary-color);
+}
+
+.statusReady,
+.readyOrders {
+  color: var(--colors-interface-success);
+}
+
+.price {
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.ingredientStack,
+.orderList,
+.statusColumn,
+.compositionList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ingredientStack {
+  display: flex;
+  min-width: 0;
+}
+
+.ingredientStackItem,
+.compositionImageFrame {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  background:
+    linear-gradient(var(--background-alt), var(--background-alt)) padding-box,
+    linear-gradient(45deg, #801ab2, #4c4cff) border-box;
+  border: 2px solid transparent;
+  border-radius: 50%;
+}
+
+.ingredientStackItem {
+  width: 64px;
+  height: 64px;
+}
+
+.ingredientStackItem + .ingredientStackItem {
+  margin-left: -16px;
+}
+
+.ingredientImage,
+.compositionImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.overflow {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-primary-color);
+  background: rgb(19 19 22 / 60%);
+}
+
+.listRegion {
+  max-height: calc(100vh - 190px);
+  padding-right: 8px;
+  overflow-y: auto;
+}
+
+.listRegion:focus-visible {
+  outline: 2px solid var(--colors-interface-accent);
+  outline-offset: 2px;
+}
+
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message {
+  padding: 24px;
+  text-align: center;
+}
+
+.statusBoard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px;
+}
+
+.statusColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.statusColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.statistics {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+}
+
+.statisticsValue {
+  text-shadow:
+    0 0 16px rgb(51 51 255 / 25%),
+    0 0 8px rgb(51 51 255 / 25%),
+    0 4px 32px rgb(51 51 255 / 50%);
+}
+
+.information {
+  width: 100%;
+}
+
+.informationNumber {
+  text-align: center;
+}
+
+.compositionRegion {
+  max-height: 312px;
+  padding-right: 24px;
+  overflow-y: auto;
+}
+
+.compositionRegion:focus-visible {
+  outline: 2px solid var(--colors-interface-accent);
+  outline-offset: 2px;
+}
+
+.compositionList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.compositionItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.compositionIngredient {
+  gap: 16px;
+  min-width: 0;
+}
+
+.compositionImageFrame {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+}
+
+.quantity {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.compositionItem .price {
+  grid-row: 1;
+  grid-column: 3;
+}
+
+.informationFooter {
+  margin-top: 40px;
+}
+
+.standaloneInformation {
+  width: min(640px, calc(100% - 48px));
+  margin: 120px auto 0;
+}
+
+.modalInformation {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 40px 40px;
+}
+
+@media (width <= 900px) {
+  .cardMeta,
+  .cardFooter,
+  .informationFooter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .statusBoard {
+    grid-template-columns: 1fr;
+  }
+}

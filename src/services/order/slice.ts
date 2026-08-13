@@ -1,13 +1,8 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
-import { createOrder } from '@utils/api';
+import { createOrderThunk } from '@services/order/actions';
 
 import type { RootState } from '@services/store';
-
-export const createOrderThunk = createAsyncThunk<number, string[]>(
-  'order/createOrder',
-  createOrder
-);
 
 export type TOrderState = {
   currentRequestId: string | null;

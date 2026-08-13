@@ -9,7 +9,9 @@ import { selectUserError, selectUserLoading } from '@services/user/slice';
 import type { FormEvent } from 'react';
 import type { Location } from 'react-router-dom';
 
-import styles from '../page.module.css';
+import authStyles from '../auth-links.module.css';
+import formStyles from '../page-form.module.css';
+import layoutStyles from '../page-layout.module.css';
 
 type TLoginLocationState = { from?: Location };
 
@@ -36,9 +38,9 @@ export const LoginPage = (): React.JSX.Element => {
   };
 
   return (
-    <main className={styles.centered}>
+    <main className={layoutStyles.centered}>
       <h1 className="text text_type_main-medium mb-6">Вход</h1>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={formStyles.form} onSubmit={handleSubmit}>
         <Input
           name="email"
           type="email"
@@ -54,22 +56,22 @@ export const LoginPage = (): React.JSX.Element => {
           onChange={(event) => setPassword(event.target.value)}
         />
         {error && (
-          <p className={`${styles.error} text text_type_main-default`}>{error}</p>
+          <p className={`${formStyles.error} text text_type_main-default`}>{error}</p>
         )}
         <Button disabled={isLoading} htmlType="submit" type="primary" size="medium">
           Войти
         </Button>
       </form>
-      <div className={styles.links}>
+      <div className={authStyles.links}>
         <p className="text text_type_main-default text_color_inactive">
           Вы — новый пользователь?{' '}
-          <Link className={styles.link} to="/register">
+          <Link className={layoutStyles.link} to="/register">
             Зарегистрироваться
           </Link>
         </p>
         <p className="text text_type_main-default text_color_inactive">
           Забыли пароль?{' '}
-          <Link className={styles.link} to="/forgot-password">
+          <Link className={layoutStyles.link} to="/forgot-password">
             Восстановить пароль
           </Link>
         </p>
