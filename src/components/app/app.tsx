@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 
 import { AppHeader } from '@components/app-header/app-header';
+import {
+  ProfileFeedConnectionLayout,
+  PublicFeedConnectionLayout,
+} from '@components/feed-connection-layout/feed-connection-layout';
 import { Modal } from '@components/modal/modal';
 import { ProtectedRoute } from '@components/protected-route/protected-route';
 import { FeedPage } from '@pages/feed-page/feed-page';
@@ -13,19 +17,21 @@ import {
 } from '@pages/ingredient-page/ingredient-page';
 import { LoginPage } from '@pages/login-page/login-page';
 import { NotFoundPage } from '@pages/not-found-page/not-found-page';
+import { OrderContent, OrderPage } from '@pages/order-page/order-page';
 import { ProfileForm } from '@pages/profile-form/profile-form';
 import { ProfileOrdersPage } from '@pages/profile-orders-page/profile-orders-page';
 import { ProfilePage } from '@pages/profile-page/profile-page';
 import { RegisterPage } from '@pages/register-page/register-page';
 import { ResetPasswordPage } from '@pages/reset-password-page/reset-password-page';
 import { useAppDispatch } from '@services/hooks';
-import { fetchIngredients } from '@services/ingredients/slice';
+import { fetchIngredients } from '@services/ingredients/actions';
 import { checkUserAuth } from '@services/user/actions';
 import {
-  clearIngredientOverlay,
-  getStoredIngredientBackground,
-  saveIngredientOverlay,
-} from '@utils/ingredient-overlay-storage';
+  clearRouteOverlay,
+  getStoredRouteOverlay,
+  isAllowedRouteOverlayPair,
+  saveRouteOverlay,
+} from '@utils/route-overlay-storage';
 
 import type { Location } from 'react-router-dom';
 
@@ -41,23 +47,30 @@ export const App = (): React.JSX.Element => {
   const dispatch = useAppDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const stateBackgroundLocation = (location.state as TRoutedLocationState | null)
+  const overlayPath = `${location.pathname}${location.search}${location.hash}`;
+  const routedBackgroundLocation = (location.state as TRoutedLocationState | null)
     ?.backgroundLocation;
+  const routedBackgroundPath = routedBackgroundLocation
+    ? `${routedBackgroundLocation.pathname}${routedBackgroundLocation.search}${routedBackgroundLocation.hash}`
+    : null;
+  const stateBackgroundLocation =
+    routedBackgroundLocation &&
+    routedBackgroundPath &&
+    isAllowedRouteOverlayPair(overlayPath, routedBackgroundPath)
+      ? routedBackgroundLocation
+      : undefined;
   const reloadBackgroundLocation = useMemo((): Location | undefined => {
     if (stateBackgroundLocation) return undefined;
-    const backgroundPath = getStoredIngredientBackground(
-      `${location.pathname}${location.search}${location.hash}`
-    );
-    if (!backgroundPath) return undefined;
-    const url = new URL(backgroundPath, window.location.origin);
+    const entry = getStoredRouteOverlay(overlayPath);
+    if (!entry) return undefined;
     return {
-      hash: url.hash,
-      key: 'ingredient-overlay-reload-background',
-      pathname: url.pathname,
-      search: url.search,
+      hash: '',
+      key: 'route-overlay-reload-background',
+      pathname: entry.backgroundPath,
+      search: '',
       state: null,
     };
-  }, [location.hash, location.pathname, location.search, stateBackgroundLocation]);
+  }, [overlayPath, stateBackgroundLocation]);
   const backgroundLocation = stateBackgroundLocation ?? reloadBackgroundLocation;
 
   useEffect(() => {
@@ -66,22 +79,24 @@ export const App = (): React.JSX.Element => {
   }, [dispatch]);
 
   useEffect(() => {
-    const overlayPath = `${location.pathname}${location.search}${location.hash}`;
-    if (stateBackgroundLocation) {
-      const backgroundPath = `${stateBackgroundLocation.pathname}${stateBackgroundLocation.search}${stateBackgroundLocation.hash}`;
-      saveIngredientOverlay(overlayPath, backgroundPath);
+    if (stateBackgroundLocation && routedBackgroundPath) {
+      saveRouteOverlay(overlayPath, routedBackgroundPath);
       return;
     }
-    if (!location.pathname.startsWith('/ingredients/')) {
-      clearIngredientOverlay();
+    if (!reloadBackgroundLocation) {
+      clearRouteOverlay();
     }
-  }, [location.hash, location.pathname, location.search, stateBackgroundLocation]);
+  }, [
+    overlayPath,
+    reloadBackgroundLocation,
+    routedBackgroundPath,
+    stateBackgroundLocation,
+  ]);
 
-  const closeIngredientModal = useCallback((): void => {
-    clearIngredientOverlay();
+  const closeRouteModal = useCallback((): void => {
+    clearRouteOverlay();
     if (reloadBackgroundLocation) {
-      const backgroundPath = `${reloadBackgroundLocation.pathname}${reloadBackgroundLocation.search}${reloadBackgroundLocation.hash}`;
-      void navigate(backgroundPath, { replace: true });
+      void navigate(reloadBackgroundLocation.pathname, { replace: true });
       return;
     }
     void navigate(-1);
@@ -93,7 +108,10 @@ export const App = (): React.JSX.Element => {
       <Routes location={backgroundLocation ?? location}>
         <Route path="/" element={<Home />} />
         <Route path="/ingredients/:id" element={<IngredientPage />} />
-        <Route path="/feed" element={<FeedPage />} />
+        <Route path="/feed" element={<PublicFeedConnectionLayout />}>
+          <Route index element={<FeedPage />} />
+          <Route path=":id" element={<OrderPage scope="public" />} />
+        </Route>
         <Route
           path="/login"
           element={
@@ -135,7 +153,10 @@ export const App = (): React.JSX.Element => {
           }
         >
           <Route index element={<ProfileForm />} />
-          <Route path="orders" element={<ProfileOrdersPage />} />
+          <Route path="orders" element={<ProfileFeedConnectionLayout />}>
+            <Route index element={<ProfileOrdersPage />} />
+            <Route path=":id" element={<OrderPage scope="profile" />} />
+          </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
@@ -144,9 +165,27 @@ export const App = (): React.JSX.Element => {
           <Route
             path="/ingredients/:id"
             element={
-              <Modal title="Детали ингредиента" onClose={closeIngredientModal}>
+              <Modal title="Детали ингредиента" onClose={closeRouteModal}>
                 <IngredientContent />
               </Modal>
+            }
+          />
+          <Route
+            path="/feed/:id"
+            element={
+              <Modal title="Детали заказа" onClose={closeRouteModal}>
+                <OrderContent scope="public" />
+              </Modal>
+            }
+          />
+          <Route
+            path="/profile/orders/:id"
+            element={
+              <ProtectedRoute>
+                <Modal title="Детали заказа" onClose={closeRouteModal}>
+                  <OrderContent scope="profile" />
+                </Modal>
+              </ProtectedRoute>
             }
           />
         </Routes>

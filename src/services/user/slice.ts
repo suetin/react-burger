@@ -7,6 +7,7 @@ import {
   registerUserThunk,
   updateUserThunk,
 } from '@services/user/actions';
+import { sessionInvalidated } from '@services/user/session';
 
 import type { RootState } from '@services/store';
 import type { TUser } from '@utils/types';
@@ -44,6 +45,18 @@ const userSlice = createSlice({
         state.error = action.payload ?? null;
         state.user = null;
       })
+      .addCase(sessionInvalidated, (state) => {
+        state.authStatus = 'checked';
+        state.error = null;
+        state.isLoading = false;
+        state.user = null;
+      })
+      .addCase(logoutUserThunk.pending, (state) => {
+        state.authStatus = 'checked';
+        state.error = null;
+        state.isLoading = true;
+        state.user = null;
+      })
       .addCase(logoutUserThunk.fulfilled, (state) => {
         state.authStatus = 'checked';
         state.error = null;
@@ -60,8 +73,7 @@ const userSlice = createSlice({
         isAnyOf(
           registerUserThunk.pending,
           loginUserThunk.pending,
-          updateUserThunk.pending,
-          logoutUserThunk.pending
+          updateUserThunk.pending
         ),
         (state) => {
           state.error = null;
