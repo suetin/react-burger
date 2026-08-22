@@ -213,7 +213,11 @@ export const BurgerConstructor = (): React.JSX.Element => {
           <ConstructorPlaceholder type="top" text="Выберите булки" />
         )}
       </div>
-      <ul className={`${styles.list} custom-scroll`} ref={listRef}>
+      <ul
+        className={`${styles.list} custom-scroll`}
+        data-testid="constructor-drop-target"
+        ref={listRef}
+      >
         {middleIngredients.length ? (
           middleIngredients.map((ingredient, index) => (
             <ConstructorIngredientItem

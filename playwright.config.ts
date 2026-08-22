@@ -1,5 +1,22 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const normalizeLocalProxyBypass = (): void => {
+  for (const variable of ['NO_PROXY', 'no_proxy']) {
+    const entries = (process.env[variable] ?? '')
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
+
+    for (const host of ['127.0.0.1', 'localhost']) {
+      if (!entries.includes(host)) entries.push(host);
+    }
+
+    process.env[variable] = entries.join(',');
+  }
+};
+
+normalizeLocalProxyBypass();
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -26,6 +43,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL: 'http://127.0.0.1:5173',
+    serviceWorkers: 'block',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
