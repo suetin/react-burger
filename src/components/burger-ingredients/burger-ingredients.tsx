@@ -54,6 +54,7 @@ const IngredientCard = ({
   return (
     <Link
       className={styles.card}
+      data-testid={`ingredient-${ingredient._id}`}
       ref={dragRef}
       to={`/ingredients/${ingredient._id}`}
       state={{ backgroundLocation: location }}
